@@ -1,7 +1,7 @@
 # evospace/main
 ## Repository with Programs. MAIN branch
 
-**Contact the author: telegram - [@guzeew_alexander](https://t.me/guzeew_alexander)**  
+**Contact the author: telegram - [@guzeew_alex](https://t.me/guzeew_alex)**  
 
 ### [CGP](https://github.com/apius-fin/evospace/tree/main/CGP) Directory
 Here are the scripts and programs for working with the Russian mail server CommuniGate Pro:
