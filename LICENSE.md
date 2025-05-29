@@ -4,7 +4,7 @@
 
 **Copyright © `2019-2025` `Guzeew Alexander`**
 
-**Contact the author: telegram - [@guzeew_alexander](https://t.me/guzeew_alexander)**  
+**Contact the author: telegram - [@guzeew_alex](https://t.me/guzeew_alex)**  
 
 This license permits any person obtaining a copy 
 of this software and associated documentation
@@ -42,7 +42,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 **Copyright © `2019-2025` `Гузеев Александр Анатольевич`**
 
-**Связь с автором: telegram - [@guzeew_alexander](https://t.me/guzeew_alexander)**  
+**Связь с автором: telegram - [@guzeew_alex](https://t.me/guzeew_alex)**  
 
 Данная лицензия разрешает лицам, получившим копию данного 
 программного обеспечения и сопутствующей документации 
