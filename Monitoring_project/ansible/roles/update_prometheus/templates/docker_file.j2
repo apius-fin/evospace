@@ -1,0 +1,19 @@
+# Используем официальный образ Prometheus
+FROM prom/prometheus:{{ prometheus_version }}
+
+# Копируем файл конфигурации Prometheus
+COPY prometheus.yml /etc/prometheus/
+
+# Создаем директорию для хранения метрик
+RUN mkdir -p /prometheus/data
+
+# Объявляем volume для хранения данных метрик
+VOLUME ["/prometheus/data"]
+
+EXPOSE {{ prometheus_port }}
+
+# Указываем точку входа
+ENTRYPOINT [ "/bin/prometheus" ]
+
+# Запускаем Prometheus с определенными параметрами
+CMD [ "--config.file=/etc/prometheus/prometheus.yml" ]

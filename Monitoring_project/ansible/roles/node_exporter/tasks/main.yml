@@ -1,0 +1,60 @@
+---
+- name: Create node_exporter user
+  ansible.builtin.user:
+    name: "{{ node_exporter_user }}"
+    state: present
+    create_home: no
+    system: yes
+    shell: /usr/sbin/nologin
+
+- name: Download Node Exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}.tar.gz"
+    dest: /tmp/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}.tar.gz
+    mode: '0644'
+
+- name: Extract Node Exporter
+  unarchive:
+    src: /tmp/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+    extra_opts: '--regex=.*node_exporter.*'
+
+- name: Change ownership of node_exporter binary
+  file:
+    path: "/usr/local/bin/node_exporter"
+    owner: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+    mode: '0755'
+    state: file
+
+- name: Create systemd service for Node Exporter
+  template:
+    src: node_exporter.service.j2
+    dest: "/etc/systemd/system/{{ node_exporter_service }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd config
+
+# Immediately handlers
+  - name: Flush handlers immediately after creation systemd service node_exporter
+    meta: flush_handlers
+
+- name: Enable then start and ensure Node Exporter service is running
+  ansible.builtin.systemd:
+    name: "{{ node_exporter_service }}"
+    enabled: yes
+    state: started
+  register: node_exporter_service_status
+  until: node_exporter_service_status is success
+  retries: 3
+  delay: 5
+
+- name: Clean up temporary files
+  block:
+    - name: Remove downloaded archive
+      file:
+        path: /tmp/node_exporter.tar.gz
+        state: absent
+  when: node_exporter_service_status is success

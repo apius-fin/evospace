@@ -1,0 +1,4 @@
+prometheus_version: latest
+prometheus_port: 9090
+retention_time: 15d
+retention_size: 50GB

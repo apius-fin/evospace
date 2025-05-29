@@ -1,0 +1,85 @@
+---
+- name: Ensure Docker is installed
+  package:
+    name: docker.io
+    state: present
+
+- name: Start Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+# Проверяем, запущен ли контейнер Prometheus
+- name: Check if Prometheus container is running
+  community.general.docker_container_facts:
+    name: prometheus
+  register: prometheus_container_facts
+
+# Если контейнер запущен, останавливаем его
+- name: Stop Prometheus container if it is running
+  docker_container:
+    name: prometheus
+    state: stopped
+  when: prometheus_container_facts.containers | length > 0 and prometheus_container_facts.containers[0].State.Running
+
+# Удаляем старый контейнер, если он существует
+- name: Remove old Prometheus container if it exists
+  docker_container:
+    name: prometheus
+    state: absent
+  when: prometheus_container_facts.containers | length > 0
+
+- name: Create directory for Prometheus and Prometheus data
+  ansible.builtin.file:
+    path: /var/prometheus/data
+    state: directory
+    owner: {{ ansible_host_user }}
+    group: {{ ansible_host_user }}
+    mode: '0755'
+
+- name: Gather facts about Prometheus nodes
+  set_fact:
+    prometheus_nodes: "{{ groups['prometheus_nodes'] }}"
+
+- name: Generate new Prometheus configuration
+  template:
+    src: prometheus.yml.j2
+    dest: /var/prometheus/prometheus.yml
+    owner: {{ ansible_host_user }}
+    group: {{ ansible_host_user }}
+    mode: '0644'
+
+- name: Copy Prometheus configuration file
+  ansible.builtin.copy:
+    src: prometheus.yml
+    dest: /var/prometheus/prometheus.yml
+    owner: {{ ansible_host_user }}
+    group: {{ ansible_host_user }}
+    mode: '0644'
+
+- name: Copy Dockerfile
+  ansible.builtin.copy:
+    src: docker_file.j2
+    dest: /var/prometheus/Dockerfile
+    owner: {{ ansible_host_user }}
+    group: {{ ansible_host_user }}
+    mode: '0644'
+
+- name: Build Docker image for Prometheus
+  ansible.builtin.command:
+    chdir: /var/prometheus
+    cmd: docker build -t prometheus-server .
+
+# Запуск нового контейнера Prometheus
+- name: Run Prometheus container
+  ansible.builtin.docker_container:
+    name: prometheus
+    image: prometheus-server
+    volumes:
+      - /var/prometheus/data:/prometheus/data  # Монтируем volume для хранения метрик
+      - /var/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro  # Монтируем файл конфигурации
+    ports:
+      - "{{ prometheus_port }}:{{ prometheus_port }}"
+    restart_policy: always
+    state: started
